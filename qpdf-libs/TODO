@@ -1,0 +1,294 @@
+Soon
+====
+
+ * Consider whether there should be a mode in which QPDFObjectHandle
+   returns nulls for operations on the wrong type instead of asserting
+   the type. The way things are wired up now, this would have to be a
+   global flag. Probably it makes sense to make that be the default
+   behavior and to add a static method in QPDFObjectHandle and
+   command-line flag that enables the stricter behavior globally for
+   easier debugging. For cases where we have enough information to do
+   so, we could still warn when not in strict mode.
+
+ * Add method to push inheritable resources to a single page by
+   walking up and copying without overwrite.  Above logic will also be
+   sufficient to fix the limitation in
+   QPDFObjectHandle::getPageImages().  Maybe add a method to get the
+   effective resources for a page without modifying the page and then
+   implement both changes in terms of that method.
+
+ * Support user-pluggable stream filters.  This would enable external
+   code to provide interpretation for filters that are missing from
+   qpdf.  Make it possible for user-provided filters to override
+   built-in filters.  Make sure that the pluggable filters can be
+   prioritized so that we can poll all registered filters to see
+   whether they are capable of filtering a particular stream.
+
+ * If possible, consider adding CCITT3, CCITT4, or any other easy
+   filters. For some reference code that we probably can't use but may
+   be handy anyway, see
+   http://partners.adobe.com/public/developer/ps/sdk/index_archive.html
+
+ * If possible, support the following types of broken files:
+
+    - Files that have no whitespace token after "endobj" such that
+      endobj collides with the start of the next object
+
+    - See ../misc/broken-files
+
+
+Lexical
+=======
+
+Consider rewriting the tokenizer. These are rough ideas at this point.
+I may or may not do this as described.
+
+ * Use flex. Generate them from ./autogen.sh and include them in the
+   source package, but do not commit them.
+
+ * Make it possible to run the lexer (tokenizer) over a while file
+   such that the following things would be possible:
+
+   * Rewrite fix-qdf in C++ so that there is no longer a runtime perl
+     dependency
+
+   * Create a way to filter content streams that could be used to
+     preserve the content stream exactly including spaces but also to
+     do things like replace everything between a detected set of
+     markers. This is to support form flattening. Ideally, it should
+     be possible to use this programmatically on broken files.
+
+   * Make it possible to replace all strings in a file lexically even
+     on badly broken files. Ideally this should work files that are
+     lacking xref, have broken links, etc., and ideally it should work
+     with encrypted files if possible. This should go through the
+     streams and strings and replace them with fixed or random
+     characters, preferably, but not necessarily, in a manner that
+     works with fonts. One possibility would be to detect whether a
+     string contains characters with normal encoding, and if so, use
+     0x41. If the string uses character maps, use 0x01. The output
+     should otherwise be unrelated to the input. This could be built
+     after the filtering and tokenizer rewrite and should be done in a
+     manner that takes advantage of the other lexical features. This
+     sanitizer should also clear metadata and replace images.
+
+General
+=======
+
+NOTE: Some items in this list refer to files in my personal home
+directory or that are otherwise not publicly accessible. This includes
+things sent to me by email that are specifically not public. Even so,
+I find it useful to make reference to them in this list
+
+ * Audit every place where qpdf allocates memory to see whether there
+   are cases where malicious inputs could cause qpdf to attempt to
+   grab very large amounts of memory. Certainly there are cases like
+   this, such as if a very highly compressed, very large image stream
+   is requested in a buffer. Hopefully normal input to output
+   filtering doesn't ever try to do this. QPDFWriter should be checked
+   carefully too. See also bugs/private/from-email-663916/
+
+ * Form flattening: ~/tmp/qtmp/form-flattening-email/. Distill this
+   into notes along with stuff in qpdf email box.
+
+ * Look at ~/Q/pdf-collection/forms-from-appian/
+
+ * Look at Travis-CI for qpdf. See email from Travis-CI in pending.
+
+ * Consider adding "uninstall" target to makefile. It should only
+   uninstall what it installed, which means that you must run
+   uninstall from the version you ran install with. It would only be
+   supported for the toolchains that support the install target
+   (libtool).
+
+ * Figure out how to find Visual Studio in Windows registry and see if
+   I can get it to work with make so I can simplify creation of
+   Windows releases.
+
+ * Provide support in QPDFWriter for writing incremental updates.
+   Provide support in qpdf for preserving incremental updates.  The
+   goal should be that QDF mode should be fully functional for files
+   with incremental updates including fix_qdf.
+
+   Note that there's nothing that says an indirect object in one
+   update can't refer to an object that doesn't appear until a later
+   update.  This means that QPDF has to treat indirect null objects
+   differently from how it does now.  QPDF drops indirect null objects
+   that appear as members of arrays or dictionaries.  For arrays, it's
+   handled in QPDFWriter where we make indirect nulls direct.  This is
+   in a single if block, and nothing else in the code cares about it.
+   We could just remove that if block and not break anything except a
+   few test cases that exercise the current behavior.  For
+   dictionaries, it's more complicated.  In this case,
+   QPDF_Dictionary::getKeys() ignores all keys with null values, and
+   hasKey() returns false for keys that have null values.  We would
+   probably want to make QPDF_Dictionary able to handle the special
+   case of keys that are indirect nulls and basically never have it
+   drop any keys that are indirect objects.
+
+   If we make a change to have qpdf preserve indirect references to
+   null objects, we have to note this in ChangeLog and in the release
+   notes since this will change output files.  We did this before when
+   we stopped flattening scalar references, so this is probably not a
+   big deal.  We also have to make sure that the testing for this
+   handles non-trivial cases of the targets of indirect nulls being
+   replaced by real objects in an update.  I'm not sure how this plays
+   with linearization, if at all.  For cases where incremental updates
+   are not being preserved as incremental updates and where the data
+   is being folded in (as is always the case with qpdf now), none of
+   this should make any difference in the actual semantics of the
+   files.
+
+ * When decrypting files with /R=6, hash_V5 is called more than once
+   with the same inputs.  Caching the results or refactoring to reduce
+   the number of identical calls could improve performance for
+   workloads that involve processing large numbers of small files.
+
+ * Consider providing a Windows installer for qpdf using NSIS.
+
+ * Consider adding a method to balance the pages tree.  It would call
+   pushInheritedAttributesToPage, construct a pages tree from scratch,
+   and replace the /Pages key of the root dictionary with the new
+   tree.
+
+ * Secure random number generation could be made more efficient by
+   using a local static to ensure a single random device or crypt
+   provider as long as this can be done in a thread-safe fashion.  In
+   the initial implementation, this is being skipped to avoid having
+   to add any dependencies on threading libraries.
+
+ * Study what's required to support savable forms that can be saved by
+   Adobe Reader.  Does this require actually signing the document with
+   an Adobe private key?  Search for "Digital signatures" in the PDF
+   spec, and look at ~/Q/pdf-collection/form-with-full-save.pdf, which
+   came from Adobe's example site.
+
+ * Consider the possibility of doing something locale-aware to support
+   non-ASCII passwords.  Update documentation if this is done.
+   Consider implementing full Unicode password algorithms from newer
+   encryption formats.
+
+ * Consider impact of article threads on page splitting/merging.
+   Subramanyam provided a test file; see ../misc/article-threads.pdf.
+   Email Q-Count: 431864 from 2009-11-03.  Other things to consider:
+   outlines, page labels, thumbnails, zones.  There are probably
+   others.
+
+ * See if we can avoid preserving unreferenced objects in object
+   streams even when preserving the object streams.
+
+ * For debugging linearization bugs, consider adding an option to save
+   pass 1 of linearization.  This code is sufficient.  Change the
+   interface to allow specification of a pass1 file, which would
+   change the behavior as in this patch.
+
+------------------------------
+Index: QPDFWriter.cc
+===================================================================
+--- QPDFWriter.cc	(revision 932)
++++ QPDFWriter.cc	(working copy)
+@@ -1965,11 +1965,15 @@
+ 
+     // Write file in two passes.  Part numbers refer to PDF spec 1.4.
+ 
++    FILE* XXX = 0;
+     for (int pass = 1; pass <= 2; ++pass)
+     {
+ 	if (pass == 1)
+ 	{
+-	    pushDiscardFilter();
++//	    pushDiscardFilter();
++	    XXX = QUtil::safe_fopen("/tmp/pass1.pdf", "w");
++	    pushPipeline(new Pl_StdioFile("pass1", XXX));
++	    activatePipelineStack();
+ 	}
+ 
+ 	// Part 1: header
+@@ -2204,6 +2208,8 @@
+ 
+ 	    // Restore hint offset
+ 	    this->xref[hint_id] = QPDFXRefEntry(1, hint_offset, 0);
++	    fclose(XXX);
++	    XXX = 0;
+ 	}
+     }
+ }
+------------------------------
+
+ * Provide APIs for embedded files.  See *attachments*.pdf in test
+   suite.  The private method findAttachmentStreams finds at least
+   cases for modern versions of Adobe Reader (>= 1.7, maybe earlier).
+   PDF Reference 1.7 section 3.10, "File Specifications", discusses
+   this.
+
+   A sourceforge user asks if qpdf can handle extracting and embedded
+   resources and references these tools, which may be useful as a
+   reference.
+
+   http://multivalent.sourceforge.net/Tools/pdf/Extract.html
+   http://multivalent.sourceforge.net/Tools/pdf/Embed.html
+
+ * The description of Crypt filters is unclear with respect to how to
+   use them to override /StmF for specific streams.  I'm not sure
+   whether qpdf will do the right thing for any specific individual
+   streams that might have crypt filters, but I believe it does based
+   on my testing of a limited subset.  The specification seems to imply
+   that only embedded file streams and metadata streams can have crypt
+   filters, and there are already special cases in the code to handle
+   those.  Most likely, it won't be a problem, but someday someone may
+   find a file that qpdf doesn't work on because of crypt filters.
+   There is an example in the spec of using a crypt filter on a
+   metadata stream.
+
+   For now, we notice /Crypt filters and decode parameters consistent
+   with the example in the PDF specification, and the right thing
+   happens for metadata filters that happen to be uncompressed or
+   otherwise compressed in a way we can filter.  This should handle
+   all normal cases, but it's more or less just a guess since I don't
+   have any test files that actually use stream-specific crypt filters
+   in them.
+
+ * The second xref stream for linearized files has to be padded only
+   because we need file_size as computed in pass 1 to be accurate.  If
+   we were not allowing writing to a pipe, we could seek back to the
+   beginning and fill in the value of /L in the linearization
+   dictionary as an optimization to alleviate the need for this
+   padding.  Doing so would require us to pad the /L value
+   individually and also to save the file descriptor and determine
+   whether it's seekable.  This is probably not worth bothering with.
+
+ * The whole xref handling code in the QPDF object allows the same
+   object with more than one generation to coexist, but a lot of logic
+   assumes this isn't the case.  Anything that creates mappings only
+   with the object number and not the generation is this way,
+   including most of the interaction between QPDFWriter and QPDF.  If
+   we wanted to allow the same object with more than one generation to
+   coexist, which I'm not sure is allowed, we could fix this by
+   changing xref_table.  Alternatively, we could detect and disallow
+   that case.  In fact, it appears that Adobe reader and other PDF
+   viewing software silently ignores objects of this type, so this is
+   probably not a big deal.
+
+ * If we ever want to have check mode check the integrity of the free
+   list, this can be done by looking at the code from prior to the
+   object stream support of 4/5/2008.  It's in an if (0) block and
+   there's a comment about it.  There's also something about it in
+   qpdf.test -- search for "free table".  On the other hand, the value
+   of doing this seems very low since no viewer seems to care, so it's
+   probably not worth it.
+
+ * QPDFObjectHandle::getPageImages() doesn't notice images in
+   inherited resource dictionaries.  See comments in that function.
+
+ * Based on an idea suggested by user "Atom Smasher", consider
+   providing some mechanism to recover earlier versions of a file
+   embedded prior to appended sections.
+
+ * From a suggestion in bug 3152169, consider having an option to
+   re-encode inline images with an ASCII encoding.
+
+ * From github issue 2, provide more in-depth output for examining
+   hint stream contents. Consider adding on option to provide a
+   human-readable dump of linearization hint tables. This should
+   include improving the 'overflow reading bit stream' message as
+   reported in issue #2.

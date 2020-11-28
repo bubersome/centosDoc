@@ -1,0 +1,124 @@
+version 0.6.0
+    - [Props] Fix ChildCount property type
+    - Added new core.c and core.h to Makefile.am.
+    - Add Artist and AlbumArtURL to MediaContainer2
+    - ifaddrs.h for Andriod compile
+    - [m4] Don't use bash arrays in m4 macros
+    - [m4] Don't use bash "let" builtin
+    - [m4] Use AS_VAR_APPEND macro instead of "+="
+      Merge pull request #149
+    - Fix possible use-after-free on exit
+      Merge pull request #151
+    - fix for issue #156
+      Invalid log line
+      https://github.com/01org/dleyna-server/issues/156
+      Merge pull request #157
+    - fix for issues #154 and #155
+      Dereference of undefined pointer value
+      https://github.com/01org/dleyna-server/issues/154
+      Result of operation is garbage or undefined
+      https://github.com/01org/dleyna-server/issues/155
+      Merge pull request #158
+    - Include libgupnp/gupnp-context-manager.h
+      Merge pull request #159
+    - Changed the Copyright to 2017
+
+ version 0.5.0
+    - [Build] Fix out-of-source-tree builds
+      https://github.com/01org/dleyna-server/issues/143
+    - Fix various configure & build issues
+      [Autoconf] Sub Makefile: Remove ACLOCAL_AMFLAGS
+      https://github.com/01org/dleyna-collabora-android/issues/127
+      [Autoconf] Add --no-undefined to compiler option
+    - [upnp] Use "port" setting when creating GUPnPContextManager
+      https://github.com/01org/dleyna-collabora-android/issues/140
+    - [Deprecated API] Use new API instead of deprecated
+      https://github.com/01org/dleyna-server/issues/104
+    - [Device] Fix wake-on ip address used for broadcast
+    - [Device] Sleeping devices cache cleanup
+    - [Device] Improve sleeping context lookup
+    - [Device] Move the network interface info storage
+    - [Device] Improve Network Interface info and device context matching
+    - [Device] Retrieve sleeping state via GetInterfaceInfo action
+    - [Device] Add sleeping device memory cache
+    - [Device] Add wake packet sending support
+    - [Device] Add Energy Management features
+    - [Configuration] Remove libdleyna-server .pc file
+      https://github.com/01org/dleyna-server/issues/113
+    - [Documentation] Fix URL to MediaServer2Spec
+    - [test] Save changed ServiceResetToken in configuration
+    - [test] Survive a missing ServiceResetToken in dsc
+    - [Tests] Fix a typo in the Upload Sync Controller's error management
+
+version 0.4.0
+	- Logs: provide correct component version
+	- Don't return empty properties in GetAll
+	- Refactor the filtering for GetAll
+	- Add a new MediaDevice BrowseObjects API
+	  https://github.com/01org/dleyna-server/issues/114
+	- Support for a new "Error" property, used in BrowseObjects
+	- Deprecate LastChange in favor of Changed signal
+	  https://github.com/01org/dleyna-server/issues/109
+	- Fix a memory leak
+	  https://github.com/01org/dleyna-collabora-android/issues/58
+	- Support of the ChildCount property
+	  https://github.com/01org/dleyna-server/issues/122
+	- New whitelist APIs
+	- Add a 'never quit' property to the Manager object
+
+version 0.2.1
+	- Various build optimizations
+	- Fix a crash case when the server stops
+	- Added the new TypeEx property and fixed Type
+	- Some documentation fixes
+	- Code cleanup
+	- Add a sample upload sync controller app
+	- Add network filtering support
+
+version 0.1.0
+	- Prepare for first stable branch
+
+version 0.0.2
+	- Add a new method GetMetaData to the org.gnome.UPnP.MediaObject2 interface
+	  to allow the retrieval of the Meta data information of an object in
+	  DIDL-Lite XML format
+	- Handle wild cards for SortCaps & SearchCaps properties
+	- Add a new property and a new function to media container objects:
+	  Resource and GetCompatibleResource()
+	- Fixed bug: CreateContainer does not specify the correct DLNAManaged flags
+	  https://github.com/01org/dleyna-server/issues/24
+	- Add MediaItem2 resource properties to container objects:
+	  URLs, Size, DLNAProfile & MimeType
+	- Fixed bug: ObjectUpdateID and ContainerUpdateID are reported on all
+	  objects and containers
+	  https://github.com/01org/dleyna-server/issues/27
+	- Fixed bug: dleyna-server can fail to discover a device if a network
+	  connection is lost during device construction
+	  https://github.com/01org/dleyna-server/issues/14
+	- Fixed bug: We don't display media with invalid metadata
+	  https://github.com/01org/dleyna-renderer/issues/30
+	- Fixed bug: MediaConnect DMS crashes dLeyna
+	  https://github.com/01org/dleyna-server/issues/49
+	- Two new methods have been added to the UPNP class, server_from_name and
+	  server_from_udn.  These methods can be used to construct Device objects
+	  from UDNs or friendly names
+	- Add new org.gnome.MediaContainer2 properties:
+	  DLNAConversion, DLNAFlags & DLNAOperation
+	- Add a Rescan method to Manager interface
+	- Add autogen.sh script to call `autoreconf -i`
+	- Remove CreatePlayListInAnyContainer() from
+	  com.intel.dLeynaServer.MediaDevice
+	- Remove CreatePlayList() from org.gnome.MediaContainer2
+	- Add CreateReference method to org.gnome.MediaContainer2
+	- Add support for object.container.playlistContainer and
+	  object.container.storageFolder object classes
+	- Fixed bug: The dLeyna-server CreateClasses property is incorrect
+	  https://github.com/01org/dleyna-server/issues/94
+	- Fixed bug: Incorrect Parent Path reported for XBMC
+	  https://github.com/01org/dleyna-server/issues/32
+	- Add a GetIcon() method to com.intel.dLeynaServer.MediaDevice
+
+version 0.0.1
+	- Initial version of dleyna-server.
+	- Enable support of deleyna-server as git submodules.
+

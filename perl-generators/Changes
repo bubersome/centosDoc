@@ -1,0 +1,58 @@
+Revision history for perl-generators.
+
+1.10  Fri Jul  1 2016
+- Update Makefile.PL to be able change requires/provides namespace for
+  software collection
+
+1.09  Thu Jun 23 2016
+- Fix regression in parsing of heredoc
+
+1.08  Fri Mar 18 2016
+- Accept square brackets for list of dependencies
+- Fixed generator to produce provides from code like this
+  "package IRI {}" (BZ#1318658)
+
+1.07  Tue Oct 20 2015
+- Return perl version as normalized perl(:VERSION) symbol
+
+  This changes two things how "require 5.006" is handled:
+  1) The version is "5.006" is normalized to RPM-friendly format "5.6.0"
+     without any epoch number. If the version cannot be normalized, the
+     dependency is not exported.
+  2) The requirement is exported as version of "perl(:VERSION)" RPM
+     symbol instead of "perl" RPM symbol.
+
+
+1.06  Tue Oct  5 2015
+- Do not process results that contain direct method calls
+
+1.05  Fri Oct  2 2015
+- Fixed parsing of "use base" to find out a bareword (BZ#1267267)
+- Update parsing of provides version when 'use version' is called
+
+1.04  Tue Jul 28 2015
+- Update parsing of provide's version
+- Add changes released in rpm 4.12.0
+
+1.03  Mon Feb  2 2015
+- Update parsing of here-doc and quoted section which should be skipped
+- Update tests suite
+
+1.02  Fri Dec 12 2014
+- Fix BZ#1172716 - update regex to properly match the module name
+- Update tests suite
+- Update the steps to get package version
+
+1.01  Tue Oct 21 2014
+- Fixed BZ#1160263 - do not catch numeric substring in the
+  variable name for VERSION
+- Update requires generator to:
+  - ignore variables in statement
+  - .pm files are not added with 'use'
+  - argument of 'aliased' is added
+
+1.00  Tue May 22 2014
+- First version
+- Take the Perl generators and fileattrs file from rpm-build 4.11.2
+  and create perl-generators package
+
